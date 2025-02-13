@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import datetime
+import os
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import IntEnum
@@ -442,6 +443,10 @@ def read_mesa(
                         checksums[activity_filename],
                     )
 
+                if not os.path.exists(activity_filepath):
+                    print(f"Skipping {record_id} due to missing activity data.")
+                    continue
+
                 activity_data = []
 
                 with open(activity_filepath) as csv_file:
@@ -470,19 +475,19 @@ def read_mesa(
 
                 start_line = overlap_data[mesaid] + 1
 
-                end_line = (
-                    int(
-                        next(
-                            row["line"]
-                            for row in activity_data
-                            if row.get("linetime") == recording_end_time_str
-                        )
+                for item in activity_data:
+                    if item.get("linetime") == recording_end_time_str:
+                        end_line = int(item["line"]) - 1
+                        break
+                else:
+                    print(
+                        f"Skipping {record_id} due to missing line matching "
+                        f"{recording_end_time_str}."
                     )
-                    - 1
-                )
+                    continue
 
                 activity_counts = [
-                    row["activity"] for row in activity_data[start_line - 1 : end_line]
+                    item["activity"] for item in activity_data[start_line - 1 : end_line]
                 ]
 
                 activity_counts = np.array(activity_counts)
