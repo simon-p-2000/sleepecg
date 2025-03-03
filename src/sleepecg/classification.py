@@ -24,9 +24,7 @@ from sleepecg.utils import _STAGE_NAMES, _merge_sleep_stages
 def prepare_data_sklearn(
     features: list[np.ndarray],
     stages: list[np.ndarray],
-    feature_ids: list[str],
     stages_mode: str,
-    remove_nan: str = 'none',
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Prepare sleep records for a sklearn model.
@@ -44,10 +42,6 @@ def prepare_data_sklearn(
     features : list[np.ndarray]
         Each 2D array in this list is a feature matrix of shape `(n_samples, n_features)`
         corresponding to a single record as returned by `extract_features()`.
-    feature_ids: list[str]
-        A list containing the identifiers of the extracted features. Feature groups passed
-        in `feature_selection` are expanded to all individual features they contain. The
-        order matches the column order of the feature matrix.
     stages : list[np.ndarray]
         Each 1D array in this list contains the sleep stages of a single record as returned
         by `extract_features()`.
@@ -67,6 +61,8 @@ def prepare_data_sklearn(
     record_ids = np.hstack([i * np.ones(len(X)) for i, X in enumerate(features)])
     features_stacked = np.vstack(features)
     stages_stacked = np.hstack(_merge_sleep_stages(stages, stages_mode))
+    features_stacked[np.isinf(features_stacked)] = -1
+    features_stacked[np.abs(features_stacked) > 1e9] = -1
     valid = stages_stacked != SleepStage.UNDEFINED
 
     return features_stacked[valid], stages_stacked[valid], record_ids[valid]

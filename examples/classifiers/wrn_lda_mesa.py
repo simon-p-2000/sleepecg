@@ -65,7 +65,7 @@ if TRAIN:
                                                                                 test_size=0.2)
 
     print("‣‣ Preparing data for Sklearn...")
-    stages_mode = "wake-sleep"
+    stages_mode = "wake-rem-nrem"
 
     features_train_pad, stages_train_pad, sample_weight = prepare_data_sklearn(
         features_train,
